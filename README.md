@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## AI Context Manager
 
-## Getting Started
+Next.js 14 App Router project that assembles structured AI context templates, supports authenticated cloud saves with slot limits, wallet/coin economy, PayPal & Xendit top-ups, and rewarded ad crediting. Builder actions consume coins (save: 2, copy: 1, download: 1 by default) to keep template operations tied to the wallet.
 
-First, run the development server:
+### Tech Stack
+- Next.js 14 (App Router) + TypeScript
+- Tailwind CSS + shadcn/ui component primitives
+- Prisma ORM with PostgreSQL
+- NextAuth (credentials + email magic link)
+- Zustand for builder state, Zod for validation
+- Vitest + Testing Library for unit tests
+- Playwright for smoke E2E
+
+### Requirements
+- Node.js ≥ 18
+- PostgreSQL database
+
+### Environment Variables
+Copy `.env.example` to `.env` and fill in:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Key variables:
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+- Email provider (`EMAIL_SERVER`, `EMAIL_FROM`) if enabling magic links
+- Wallet economy: `REWARD_PER_AD`, `AD_COOLDOWN_MIN`, `COINS_PER_PACK`, `SLOTS_PER_PACK`, `USD_TO_COINS`, `IDR_TO_COINS`
+- Builder feature costs: `NEXT_PUBLIC_BUILDER_SAVE_COST`, `NEXT_PUBLIC_BUILDER_COPY_COST`, `NEXT_PUBLIC_BUILDER_DOWNLOAD_COST`
+- PayPal: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV`, `WEBHOOK_SECRET_PAYPAL`
+- Xendit: `XENDIT_SECRET_KEY`, `XENDIT_ENV`, `WEBHOOK_SECRET_XENDIT`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Setup
+```bash
+npm install
+npm run db:generate
+npx prisma migrate dev
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Visit `http://localhost:3000/builder` for the guest builder. Auth routes live under `/sign-in` and `/sign-up`.
 
-## Learn More
+### Testing
+- **Unit**: `npm test` (Vitest + Testing Library)
+- **Watch**: `npm run test:watch`
+- **E2E smoke**: `npm run test:e2e` (requires app running locally; configure `PLAYWRIGHT_BASE_URL` if needed)
 
-To learn more about Next.js, take a look at the following resources:
+### Formatting & Linting
+```bash
+npm run lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Deployment (Vercel)
+1. Create a Postgres database (Neon/Supabase).
+2. Set environment variables in Vercel dashboard.
+3. Add `npx prisma migrate deploy` to the build command or a separate Vercel hook.
+4. Configure webhook secrets for PayPal/Xendit and point providers to the deployed URLs:
+   - PayPal: `https://your-app.vercel.app/api/wallet/topup/paypal/webhook`
+   - Xendit: `https://your-app.vercel.app/api/wallet/topup/xendit/webhook`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Useful Scripts
+- `npm run db:migrate` – run Prisma migrations locally
+- `npm run test` / `npm run test:e2e` – run unit or Playwright suites
